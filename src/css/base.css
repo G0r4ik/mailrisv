@@ -1,0 +1,24 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  transition: background 0.1s;
+}
+body {
+  font-family: Arial, sans-serif;
+  background: var(--color-background);
+  font-size: var(--text-middle);
+  line-height: 20px;
+  color: var(--color-text);
+  display: flex;
+}
+button {
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: inherit;
+}
+a {
+  text-decoration: none;
+  color: var(--color-text);
+}
