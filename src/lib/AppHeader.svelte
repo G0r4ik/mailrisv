@@ -39,10 +39,9 @@
     padding-left: 16px;
     padding-right: 12px;
     margin-bottom: var(--unit);
-    background: var(--color-header-bg);
+    background: var(--color-header-background);
     color: var(--color-header-text);
     filter: drop-shadow(0 0 16px rgb(2 13 41 / 0.12));
-    background: #232324;
   }
   .header__go-back {
     display: flex;

@@ -26,7 +26,7 @@
      */
     "checkJs": true
   },
-  
+
   /**
    * Use global.d.ts instead of compilerOptions.types
    * to avoid limiting type declarations.

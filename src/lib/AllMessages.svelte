@@ -22,6 +22,7 @@
     setPagesOfMessages,
     _pagesOfMessages,
   } from '../globalStore'
+  import UserAvatar from './UserAvatar.svelte'
 
   let page = 1
   let visibleMessage = null
@@ -130,7 +131,6 @@
 </script>
 
 <div class="messages" id="id1">
-  {maxPages}
   {#if $_currentMessages.length}
     {#each $_currentMessages as message (message.id)}
       <div
@@ -157,8 +157,8 @@
               alt="logo"
             />
           {:else}
-            <div class="message__user-img message__user-img_word">
-              {message.author.surname[0]}
+            <div class="message__user-img">
+              <UserAvatar firstChar={message.author.surname[0]} />
             </div>
           {/if}
           <span
@@ -288,14 +288,6 @@
     min-width: 32px;
     min-height: 32px;
     border-radius: 50%;
-  }
-  .message__user-img_word {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 700;
-    background: #d3b3ff;
-    color: #874dd6;
   }
   .message__user-name {
     font-weight: 400;

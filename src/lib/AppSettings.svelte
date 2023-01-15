@@ -1,7 +1,7 @@
 <script>
   import { createEventDispatcher, onMount } from 'svelte'
-
   import { i18n, changeLanguage, _language } from '../globalStore'
+  import { anotherThemes, darkColors, lightColors } from '../themes'
   import IconCross from './svg-icons/IconCross.svelte'
 
   const dispatch = createEventDispatcher()
@@ -11,154 +11,9 @@
   }
 
   export let isOpenSettings
-
   let language = $_language
-
   let currentTheme = null
-  let anotherThemes = [
-    {
-      id: 'default-dark',
-      darkOrLight: 'dark',
-      themeHeader: 'var(--color-accent-bg)',
-      sidebarColor: 'light',
-      themeBg: 'var(--color-background-dark)',
-      themeBgURL: 'another-theme--1',
-    },
-    {
-      id: 'default-light',
-      darkOrLight: 'light',
-      themeHeader: 'var(--color-background-light)',
-      sidebarColor: 'dark',
-      themeBg: 'var(--color-background-light)',
-      themeBgURL: 'another-theme--2',
-    },
-    {
-      id: 'theme-3',
-      darkOrLight: 'light',
-      themeHeader: '#6B1344',
-      sidebarColor: 'light',
-      themeBgURL: 'another-theme-mini--3',
-      themeBgImg: 'another-theme--3',
-    },
-  ]
   let currentSettings = 'theme'
-  let darkColors = [
-    {
-      id: 'theme-color-1',
-      darkOrLight: 'light',
-      themeHeader: 'rgba(0, 0, 0, 0.5)',
-      sidebarColor: 'light',
-      themeBg: 'rgba(74, 53, 47, 1)',
-    },
-    {
-      id: 'theme-color-2',
-      darkOrLight: 'light',
-      themeHeader: 'rgba(0, 0, 0, 0.4)',
-      sidebarColor: 'light',
-      themeBg: 'rgba(66, 66, 66, 1)',
-    },
-    {
-      id: 'theme-color-3',
-      darkOrLight: 'light',
-      themeHeader: 'rgba(0, 0, 0, 0.4)',
-      sidebarColor: 'light',
-      themeBg: 'rgba(90, 53, 90, 1)',
-    },
-    {
-      id: 'theme-color-4',
-      darkOrLight: 'light',
-      themeHeader: 'rgba(0, 0, 0, 0.4)',
-
-      sidebarColor: 'light',
-      themeBg: 'rgba(53, 56, 90, 1)',
-    },
-    {
-      id: 'theme-color-5',
-      darkOrLight: 'light',
-      themeHeader: 'rgba(0, 0, 0, 0.4)',
-      sidebarColor: 'light',
-      themeBg: 'rgba(100, 110, 203, 1)',
-    },
-    {
-      id: 'theme-color-6',
-      darkOrLight: 'light',
-      themeHeader: 'rgba(0, 0, 0, 0.4)',
-      sidebarColor: 'light',
-      themeBg: 'rgba(231, 54, 114, 1)',
-    },
-    {
-      id: 'theme-color-7',
-      darkOrLight: 'light',
-      themeHeader: 'rgba(0, 0, 0, 0.4)',
-      sidebarColor: 'light',
-      themeBg: 'rgba(244, 67, 54, 1)',
-    },
-    {
-      id: 'theme-color-8',
-      darkOrLight: 'light',
-      themeHeader: 'rgba(0, 0, 0, 0.4)',
-      sidebarColor: 'light',
-      themeBg: 'rgba(56, 142, 60, 1)',
-    },
-  ]
-  let lightColors = [
-    {
-      id: 'theme-color-9',
-      darkOrLight: 'light',
-      themeHeader: 'rgba(0, 0, 0, 0.4)',
-      sidebarColor: 'dark',
-      themeBg: 'rgba(129, 216, 208, 1)',
-    },
-    {
-      id: 'theme-color-10',
-      darkOrLight: 'light',
-      themeHeader: 'rgba(0, 0, 0, 0.4)',
-      sidebarColor: 'dark',
-      themeBg: 'rgba(226, 220, 210, 1)',
-    },
-    {
-      id: 'theme-color-11',
-      darkOrLight: 'light',
-      themeHeader: 'rgba(0, 0, 0, 0.4)',
-      sidebarColor: 'dark',
-      themeBg: 'rgba(255, 235, 205, 1)',
-    },
-    {
-      id: 'theme-color-12',
-      darkOrLight: 'light',
-      themeHeader: 'rgba(0, 0, 0, 0.4)',
-      sidebarColor: 'dark',
-      themeBg: 'rgba(231, 238, 210, 1)',
-    },
-    {
-      id: 'theme-color-13',
-      darkOrLight: 'light',
-      themeHeader: 'rgba(0, 0, 0, 0.4)',
-      sidebarColor: 'dark',
-      themeBg: 'rgba(208, 240, 247, 1)',
-    },
-    {
-      id: 'theme-color-14',
-      darkOrLight: 'light',
-      themeHeader: 'rgba(0, 0, 0, 0.4)',
-      sidebarColor: 'dark',
-      themeBg: 'rgba(201, 208, 251, 1)',
-    },
-    {
-      id: 'theme-color-15',
-      darkOrLight: 'light',
-      themeHeader: 'rgba(0, 0, 0, 0.4)',
-      sidebarColor: 'dark',
-      themeBg: 'rgba(221, 243, 255, 1)',
-    },
-    {
-      id: 'theme-color-16',
-      darkOrLight: 'light',
-      themeHeader: 'rgba(0, 0, 0, 0.4)',
-      sidebarColor: 'dark',
-      themeBg: 'rgba(240, 240, 240, 1)',
-    },
-  ]
 
   onMount(() => {
     const initUserTheme = getTheme() || getMediaPreference()
@@ -172,8 +27,8 @@
       .href
   }
   function setTheme(theme) {
-    if (theme.darkOrLight) {
-      document.documentElement.className = theme.darkOrLight
+    if (theme.basedOn) {
+      document.documentElement.className = theme.basedOn
     }
     if (theme.themeBgImg) {
       const img = new URL(`../assets/${theme.themeBgImg}.jpg`, import.meta.url)
@@ -181,22 +36,27 @@
       document.body.style.background = `url(${img}`
       document.body.style.backgroundSize = 'cover'
     }
+
+    //
     document.documentElement.style.setProperty(
       `--color-sidebar-text`,
-      `var(--color-text-${theme.sidebarColor})`
+      `var(--color-text-${theme.colorText})`
     )
     document.documentElement.style.setProperty(
       `--color-sidebar-icon`,
-      `var(--color-sidebar-icon-${theme.sidebarColor})`
+      `var(--color-sidebar-icon-${theme.colorText})`
+    )
+
+    //
+    document.documentElement.style.setProperty(
+      `--color-header-background`,
+      theme.backgroundHeader
     )
     document.documentElement.style.setProperty(
-      `--color-header-bg`,
-      theme.themeHeader
+      `--color-header-text`,
+      `var(--color-text-${theme.colorText})`
     )
-    document.documentElement.style.setProperty(
-      `--color-background`,
-      theme.themeBg
-    )
+
     document.body.style.background = theme.themeBg
     currentTheme = theme
     localStorage.setItem('user-theme', JSON.stringify(theme))
@@ -231,7 +91,7 @@
       <div
         class="settings__cross"
         on:click={closeSettings}
-        on:keypress={() => {}}
+        on:keypress={closeSettings}
       >
         <IconCross />
       </div>

@@ -24,7 +24,7 @@ const locale = {
     Basket: { ru: 'Корзина', en: 'Basket' },
   },
 
-  _sortOfMessages: {
+  sortOfMessages: {
     sortNewToOld: { ru: 'Сначала новые', en: 'First the new' },
     sortOldToNew: { ru: 'Сначала старые', en: 'First the old' },
     sortAuthorFirstToLast: { ru: 'Автор от А до Я', en: 'Author from A to Z' },
@@ -48,9 +48,10 @@ const locale = {
     newFolder: { ru: 'Новая папка', en: 'New folder' },
     sidebarSettings: { ru: 'Настройки', en: 'Settings' },
     sort: { ru: 'Сортировка', en: 'Sort' },
-    headerFilters: { ru: 'Фильтр', en: 'Filters' },
-    allLetters: { ru: 'Все сообщения', en: 'All letters' },
-    writeLetter: { ru: 'Написать письмо', en: 'Write letter' },
+    headerFilter: { ru: 'Фильтр', en: 'Filter' },
+    headerFilters: { ru: 'Фильтры', en: 'Filters' },
+    allmessages: { ru: 'Все сообщения', en: 'All messages' },
+    writemessage: { ru: 'Написать письмо', en: 'Write message' },
     hide: { ru: 'Скрыть', en: 'Hide' },
     showMore: { ru: 'Показать еще', en: 'Show more' },
     appearance: { ru: 'Внешний вид', en: 'Appearance' },

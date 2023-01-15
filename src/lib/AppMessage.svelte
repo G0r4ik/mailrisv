@@ -2,6 +2,7 @@
   import { getMessageImageById } from '../api'
   import IconBookmark from './svg-icons/IconBookmark.svelte'
   import IconImportant from './svg-icons/IconImportant.svelte'
+  import UserAvatar from './UserAvatar.svelte'
   import {
     setCurrentMessage,
     i18n,
@@ -10,7 +11,6 @@
   } from '../globalStore'
   import { onMount } from 'svelte'
 
-  $: imgs = $_currentMessage.doc.img
   let allRecipients = []
   let defaultMaxRecipients = 4
   let imagesCount = null
@@ -116,8 +116,8 @@
       {#if $_currentMessage.author.avatar}
         <img class="author__img" src={$_currentMessage.author.avatar} alt="" />
       {:else}
-        <div class="message__user-img message__user-img_word">
-          {$_currentMessage.author.surname[0]}
+        <div class="message__user-img">
+          <UserAvatar firstChar={$_currentMessage.author.surname[0]} />
         </div>
       {/if}
 
@@ -168,10 +168,10 @@
         </div>
       </div>
     </div>
-    {#if $_currentMessage.doc?.img}
+    {#if $_currentMessage.imagesCount}
       <div class="full-message__attaches attaches">
         <div class="attaches__items">
-          {#each imgs as attach (attach)}
+          {#each $_currentMessage.doc.img as attach (attach)}
             <img class="attaches__img" src={attach} alt="" loading="lazy" />
           {/each}
         </div>
@@ -240,19 +240,13 @@
     display: flex;
     align-items: center;
   }
-  .author__img {
+  .author__img,
+  .message__user-img {
     width: 32px;
+    min-width: 32px;
     height: 32px;
     border-radius: 50%;
     margin-right: var(--unit);
-  }
-  .message__user-img_word {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 700;
-    background: #d3b3ff;
-    color: #874dd6;
   }
   .author__name {
     font-weight: 400;

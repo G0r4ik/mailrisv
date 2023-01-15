@@ -33,3 +33,8 @@ export const getNumberOfMessagesInFolder = async (folder, filters) => {
   )
   return data.json()
 }
+
+export const getNumberOfMessagesInAllFolders = async () => {
+  const data = await fetch(`${BASE_URL}/getNumberOfMessagesInAllFolders`)
+  return data.json()
+}

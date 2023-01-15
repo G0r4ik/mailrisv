@@ -1,12 +1,6 @@
-<svg
-  xmlns="http://www.w3.org/2000/svg"
-  width="8"
-  height="6"
-  fill="none"
-  class="filter-select-control__control"
->
+<svg xmlns="http://www.w3.org/2000/svg" width="8" height="6" fill="none">
   <path
-    fill="var(--color-icon)"
+    fill="var(--color-header-text)"
     fill-rule="evenodd"
     d="M7.707.793a1 1 0 0 1 0 1.414l-3 3a1 1 0 0 1-1.414 0l-3-3A1 1 0 0 1 1.707.793L4 3.086 6.293.793a1 1 0 0 1 1.414 0Z"
     clip-rule="evenodd"

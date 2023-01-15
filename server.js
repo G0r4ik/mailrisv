@@ -9,8 +9,7 @@ import stream from 'stream'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
-const mode = process.env.NODE_ENV
-const distPath = path.join(__dirname, mode !== 'production' ? 'dist' : '')
+const distPath = path.join(__dirname, '')
 const distAssetsPath = path.join(distPath, 'assets')
 
 const startDate = new Date()
@@ -34,8 +33,58 @@ const staticFolders = [
 ]
 const userFolders = new Set()
 const db = []
-const imagesInLetters = {}
+const imagesInmessages = {}
 const allMessages = {}
+
+function createFolders(message) {
+  if (!message.folder) message.folder = 'Входящие'
+  if (!allMessages[message.folder]) allMessages[message.folder] = []
+  if (!staticFolders.includes(message.folder)) userFolders.add(message.folder)
+  allMessages[message.folder].push(message)
+}
+function removeImgFrommessageAndMove(message) {
+  if (Array.isArray(message.doc.img)) {
+    message.imagesCount = message.doc.img.length
+    imagesInmessages[message.id] = message.doc.img
+  } else {
+    message.imagesCount = 1
+    imagesInmessages[message.id] = [message.doc.img]
+  }
+  message.doc.img = []
+}
+function filterMessages(allMessages, filterObj) {
+  let copyOfAllMessages = [...allMessages]
+  if (filterObj.withAttachments) {
+    copyOfAllMessages = copyOfAllMessages.filter(message => message.imagesCount)
+  }
+  if (filterObj.bookmark) {
+    copyOfAllMessages = copyOfAllMessages.filter(message => message.bookmark)
+  }
+  if (filterObj.unread) {
+    copyOfAllMessages = copyOfAllMessages.filter(message => !message.read)
+  }
+  return copyOfAllMessages
+}
+function sortMessages(messages, sort) {
+  const copyMessages = [...messages]
+  if (sort === 'newToOld') return copyMessages
+  if (sort === 'oldToNew') return copyMessages.reverse()
+  if (sort === 'titleFirstToLast') {
+    return copyMessages.sort((a, b) => a.title.localeCompare(b.title))
+  }
+  if (sort === 'titleLastToFirst') {
+    return copyMessages.sort((a, b) => b.title.localeCompare(a.title))
+  }
+  if (sort === 'authorLastToFirst') {
+    copyMessages.sort((a, b) => a.author.email.localeCompare(b.author.email))
+    return copyMessages
+  }
+  if (sort === 'authorFirstToLast') {
+    copyMessages.sort((a, b) => b.author.email.localeCompare(a.author.email))
+    return copyMessages
+  }
+}
+const urlDecode = str => decodeURIComponent((str + '').replace(/\+/g, '%20'))
 
 const reader = fs.createReadStream(path.join(__dirname, 'db.json'), {
   highWaterMark: 81920, // 10kb = 8 * 1024 * 10
@@ -81,62 +130,16 @@ reader.on('data', chunk => {
   }
 })
 
-function createFolders(message) {
-  if (!message.folder) message.folder = 'Входящие'
-  if (!allMessages[message.folder]) allMessages[message.folder] = []
-  if (!staticFolders.includes(message.folder)) userFolders.add(message.folder)
-  allMessages[message.folder].push(message)
-}
-function removeImgFromLetterAndMove(message) {
-  if (Array.isArray(message.doc.img)) {
-    message.imagesCount = message.doc.img.length
-    imagesInLetters[message.id] = message.doc.img
-  } else {
-    message.imagesCount = 1
-    imagesInLetters[message.id] = [message.doc.img]
-  }
-  message.doc.img = []
-}
-function filterMessages(allMessages, filterObj) {
-  let copyOfAllMessages = [...allMessages]
-  if (filterObj.withAttachments) {
-    copyOfAllMessages = copyOfAllMessages.filter(message => message.imagesCount)
-  }
-  if (filterObj.bookmark) {
-    copyOfAllMessages = copyOfAllMessages.filter(message => message.bookmark)
-  }
-  if (filterObj.unread) {
-    copyOfAllMessages = copyOfAllMessages.filter(message => !message.read)
-  }
-  return copyOfAllMessages
-}
-function sortMessages(messages, sort) {
-  const copyMessages = [...messages]
-  if (sort === 'newToOld') return copyMessages
-  if (sort === 'oldToNew') return copyMessages.reverse()
-  if (sort === 'titleFirstToLast') {
-    return copyMessages.sort((a, b) => a.title.localeCompare(b.title))
-  }
-  if (sort === 'titleLastToFirst') {
-    return copyMessages.sort((a, b) => b.title.localeCompare(a.title))
-  }
-  if (sort === 'authorLastToFirst') {
-    copyMessages.sort((a, b) => a.author.email.localeCompare(b.author.email))
-    return copyMessages
-  }
-  if (sort === 'authorFirstToLast') {
-    copyMessages.sort((a, b) => b.author.email.localeCompare(a.author.email))
-    return copyMessages
-  }
-}
-const urlDecode = str => decodeURIComponent((str + '').replace(/\+/g, '%20'))
-
 reader.on('end', () => {
   db.sort((a, b) => new Date(b.date) - new Date(a.date))
   for (let i = 0; i < db.length; i++) {
     db[i].id = i
     createFolders(db[i])
-    if (db[i].doc) removeImgFromLetterAndMove(db[i])
+    for (let j = 0; j < db[i].to.length; j++) {
+      if (db[i].to[j].avatar) delete db[i].to[j].avatar
+      if (db[i].to[j].email) delete db[i].to[j].email
+    }
+    if (db[i].doc) removeImgFrommessageAndMove(db[i])
   }
 
   server.listen(PORT, () => {
@@ -175,6 +178,22 @@ const server = http.createServer((req, res) => {
       const copyOfAllMessages = filterMessages(allMessages[folder], filterObj)
       const messages = sortMessages(copyOfAllMessages, sort)
       return res.end(JSON.stringify(messages.slice(startIndex, endIndex)))
+      // res.setHeader('Content-Encoding', 'gzip')
+      // const br = zlib.createGzip()
+      // return stream.pipeline(
+      //   JSON.stringify(messages.slice(startIndex, endIndex)),
+      //   br,
+      //   res,
+      //   () => {}
+      // )
+    }
+    if (req.url.startsWith('/getNumberOfMessagesInAllFolders')) {
+      res.setHeader('Content-Type', MIME['json'])
+      const folders = Object.keys(allMessages)
+
+      const result = {}
+      folders.map(folder => (result[folder] = allMessages[folder].length))
+      return res.end(JSON.stringify(result))
     }
     if (req.url.startsWith('/getNumberOfMessagesInFolder')) {
       res.setHeader('Content-Type', MIME['json'])
@@ -198,7 +217,7 @@ const server = http.createServer((req, res) => {
         res.statusCode = 400
         return res.end('Invalid id or number')
       }
-      const img = imagesInLetters[idOfMessage]?.[imageNumber]
+      const img = imagesInmessages[idOfMessage]?.[imageNumber]
       if (!img) {
         console.log("Couldn't find the picture")
         res.statusCode = 404

@@ -18,11 +18,23 @@
     setPagesOfMessages,
   } from '../globalStore'
 
+  const sortText = [
+    'newToOld',
+    'oldToNew',
+    'authorFirstToLast',
+    'authorLastToFirst',
+    'titleFirstToLast',
+    'titleLastToFirst',
+  ]
+
   $: isAllFilterDisabled = Object.values($_filtersOfMessages).every(
     k => k === false
   )
-  let isShowFilter = false
-  let isShowSort = false
+  $: isAllFilterAndSortDisabled =
+    isAllFilterDisabled && $_sortOfMessages === 'newToOld'
+
+  let isShowFilterMenu = false
+  let isShowSortMenu = false
 
   const changeSortAndLoadMessages = async sort => {
     if ($_sortOfMessages === sort) return
@@ -34,9 +46,11 @@
   const filteredMessages = async filter => {
     if (filter === 'all') {
       clearFilter()
+      if (isAllFilterDisabled) return
     } else if (filter === 'reset') {
       clearFilter()
       changeSort('newToOld')
+      isShowSortMenu = false
     } else {
       setFilter(filter)
     }
@@ -45,81 +59,118 @@
     await loadMessages(false)
   }
 
+  function closeFilterPopup() {
+    isShowFilterMenu = false
+    document.body.removeEventListener('click', clickOutside)
+    document.body.removeEventListener('keydown', pressEsc)
+  }
+
+  let clickOutside = event => {
+    const filterNode = document.querySelector('.filter-messages')
+    if (!filterNode.contains(event.target)) closeFilterPopup()
+  }
+  let pressEsc = event => {
+    if (event.key === 'Escape') closeFilterPopup()
+  }
+
   function showFilterMenu() {
-    isShowFilter = !isShowFilter
-    isShowSort = false
+    isShowFilterMenu = !isShowFilterMenu
+    isShowSortMenu = false
+    document.body.addEventListener('click', clickOutside)
+    document.body.addEventListener('keydown', pressEsc)
+  }
+
+  function showSortMenu() {
+    isShowSortMenu = !isShowSortMenu
+  }
+
+  function getNameOfLocale(sort) {
+    return `sort${sort[0].toUpperCase()}${sort.slice(1)}`
   }
 </script>
 
 <div class="filter-messages">
   <div
     class="filter-messages__select filter-select-control"
-    on:click={() => showFilterMenu()}
+    on:click={event => showFilterMenu()}
     on:keypress={e => (e.key === 'Enter' ? showFilterMenu() : '')}
   >
     <div class="filter-select-control__icons">
       {#if $_filtersOfMessages.unread}
-        <div class="filter-list__icon">
+        <div class="filter-select-control__icon">
           <IconStatus isRead={false} />
         </div>
       {/if}
       {#if $_filtersOfMessages.bookmark}
-        <div class="filter-list__icon">
+        <div class="filter-select-control__icon">
           <IconBookmark active={true} />
         </div>
       {/if}
       {#if $_filtersOfMessages.withAttachments}
-        <div class="filter-list__icon">
+        <div class="filter-select-control__icon">
           <IconAttach />
         </div>
       {/if}
     </div>
-    <button class="filter-select-control__text">
-      {i18n('another', 'headerFilters', $_language)}
-    </button>
+    <span class="filter-select-control__text">
+      {#if $_sortOfMessages !== 'newToOld'}
+        {i18n('sortOfMessages', getNameOfLocale($_sortOfMessages), $_language)}
+      {:else if $_filtersOfMessages.bookmark && !$_filtersOfMessages.unread && !$_filtersOfMessages.withAttachments}
+        {i18n('another', 'bookmark', $_language)}
+      {:else if $_filtersOfMessages.unread && !$_filtersOfMessages.bookmark && !$_filtersOfMessages.withAttachments}
+        {i18n('another', 'unread', $_language)}
+      {:else if $_filtersOfMessages.withAttachments && !$_filtersOfMessages.bookmark && !$_filtersOfMessages.unread}
+        {i18n('another', 'withAttachments', $_language)}
+      {:else if isAllFilterAndSortDisabled}
+        {i18n('another', 'headerFilter', $_language)}
+      {:else}
+        {i18n('another', 'headerFilters', $_language)}
+      {/if}
+    </span>
     <div class="filter-select-control__control">
       <IconSelectControl />
     </div>
   </div>
-  {#if isShowFilter}
+  {#if isShowFilterMenu}
     <div class="filter-messages__list filter-list">
       <ul class="filter-list__inner">
         <li
           class="filter-list__item"
           class:filter-list__item_checked={isAllFilterDisabled}
           on:click={() => filteredMessages('all')}
-          on:keypress={() => filteredMessages('all')}
+          on:keypress={e => (e.key === 'Enter' ? filteredMessages('all') : '')}
         >
           <div class="filter-list__item-arrow">
             <IconCheck />
           </div>
-          {i18n('another', 'allLetters', $_language)}
+          {i18n('another', 'allmessages', $_language)}
         </li>
         <li
           class="filter-list__item"
           class:filter-list__item_checked={$_filtersOfMessages.unread}
           on:click={() => filteredMessages('unread')}
-          on:keypress={() => filteredMessages('unread')}
+          on:keypress={e =>
+            e.key === 'Enter' ? filteredMessages('unread') : ''}
         >
           <div class="filter-list__item-arrow">
             <IconCheck />
           </div>
-          <div class="filter-list__icon">
+          <div class="filter-select-control__icon">
             <IconStatus isRead={false} />
           </div>
-
           {i18n('another', 'unread', $_language)}
         </li>
         <li
           class="filter-list__item"
           class:filter-list__item_checked={$_filtersOfMessages.bookmark}
           on:click={() => filteredMessages('bookmark')}
-          on:keypress={() => filteredMessages('bookmark')}
+          on:keypress={e =>
+            e.key === 'Enter' ? filteredMessages('bookmark') : ''}
         >
           <div class="filter-list__item-arrow">
             <IconCheck />
           </div>
-          <div class="filter-list__icon">
+          <div class="filter-select-control__icon">
             <IconBookmark active={true} />
           </div>
           {i18n('another', 'bookmark', $_language)}
@@ -128,12 +179,13 @@
           class="filter-list__item"
           class:filter-list__item_checked={$_filtersOfMessages.withAttachments}
           on:click={() => filteredMessages('withAttachments')}
-          on:keypress={() => filteredMessages('withAttachments')}
+          on:keypress={e =>
+            e.key === 'Enter' ? filteredMessages('withAttachments') : ''}
         >
           <div class="filter-list__item-arrow">
             <IconCheck />
           </div>
-          <div class="filter-list__icon">
+          <div class="filter-select-control__icon">
             <IconAttach />
           </div>
           {i18n('another', 'withAttachments', $_language)}
@@ -142,91 +194,33 @@
       <hr class="filter-list__hr" />
       <div
         class="filter-list__sort filter-sort"
-        on:click={() => (isShowSort = !isShowSort)}
-        on:keypress={() => (isShowSort = !isShowSort)}
+        on:click={() => showSortMenu()}
+        on:keypress={e => (e.key === 'Enter' ? showSortMenu() : '')}
       >
         {i18n('another', 'sort', $_language)}
-        {#if isShowSort}
+        {#if isShowSortMenu}
           <ul
             on:click|stopPropagation
             on:keypress|stopPropagation
             class="filter-sort__list"
           >
-            <li
-              class="filter-sort__item"
-              class:filter-sort__item_active={$_sortOfMessages === 'newToOld'}
-              on:click={() => changeSortAndLoadMessages('newToOld')}
-              on:keypress={() => changeSortAndLoadMessages('newToOld')}
-            >
-              <div class="filter-sort__item-arrow">
-                <IconCheck />
-              </div>
-              {i18n('_sortOfMessages', 'sortNewToOld', $_language)}
-            </li>
-            <li
-              class="filter-sort__item"
-              class:filter-sort__item_active={$_sortOfMessages === 'oldToNew'}
-              on:click={() => changeSortAndLoadMessages('oldToNew')}
-              on:keypress={() => changeSortAndLoadMessages('oldToNew')}
-            >
-              <div class="filter-sort__item-arrow">
-                <IconCheck />
-              </div>
-              {i18n('_sortOfMessages', 'sortOldToNew', $_language)}
-            </li>
-
-            <li
-              class="filter-sort__item"
-              class:filter-sort__item_active={$_sortOfMessages ===
-                'authorFirstToLast'}
-              on:click={() => changeSortAndLoadMessages('authorFirstToLast')}
-              on:keypress={() => changeSortAndLoadMessages('authorFirstToLast')}
-            >
-              <div class="filter-sort__item-arrow">
-                <IconCheck />
-              </div>
-              {i18n('_sortOfMessages', 'sortAuthorFirstToLast', $_language)}
-            </li>
-            <li
-              class="filter-sort__item"
-              class:filter-sort__item_active={$_sortOfMessages ===
-                'authorLastToFirst'}
-              on:click={() => changeSortAndLoadMessages('authorLastToFirst')}
-              on:keypress={() => changeSortAndLoadMessages('authorLastToFirst')}
-            >
-              <div class="filter-sort__item-arrow">
-                <IconCheck />
-              </div>
-              {i18n('_sortOfMessages', 'sortAuthorLastToFirst', $_language)}
-            </li>
-            <li
-              class="filter-sort__item"
-              class:filter-sort__item_active={$_sortOfMessages ===
-                'titleFirstToLast'}
-              on:click={() => changeSortAndLoadMessages('titleFirstToLast')}
-              on:keypress={() => changeSortAndLoadMessages('titleFirstToLast')}
-            >
-              <div class="filter-sort__item-arrow">
-                <IconCheck />
-              </div>
-              {i18n('_sortOfMessages', 'sortTitleFirstToLast', $_language)}
-            </li>
-            <li
-              class="filter-sort__item"
-              class:filter-sort__item_active={$_sortOfMessages ===
-                'titleLastToFirst'}
-              on:click={() => changeSortAndLoadMessages('titleLastToFirst')}
-              on:keypress={() => changeSortAndLoadMessages('titleLastToFirst')}
-            >
-              <div class="filter-sort__item-arrow">
-                <IconCheck />
-              </div>
-              {i18n('_sortOfMessages', 'sortTitleLastToFirst', $_language)}
-            </li>
+            {#each sortText as sort}
+              <li
+                class="filter-sort__item"
+                class:filter-sort__item_active={$_sortOfMessages === sort}
+                on:click={() => changeSortAndLoadMessages(sort)}
+                on:keypress={() => changeSortAndLoadMessages(sort)}
+              >
+                <div class="filter-sort__item-arrow">
+                  <IconCheck />
+                </div>
+                {i18n('sortOfMessages', getNameOfLocale(sort), $_language)}
+              </li>
+            {/each}
           </ul>
         {/if}
       </div>
-      {#if !isAllFilterDisabled}
+      {#if !isAllFilterAndSortDisabled}
         <hr class="filter-list__hr" />
         <button
           class="filter-list__reset"
@@ -240,24 +234,24 @@
 </div>
 
 <style>
-  .filter-messages__select {
+  .filter-select-control {
     display: flex;
     align-items: center;
-  }
-  .filter-select-control {
     padding: 6px 18px;
     border-radius: 8px;
     cursor: pointer;
+    transition: 0.3s;
   }
   .filter-select-control:hover,
   .filter-list__item:hover {
     background: var(--color-hover);
+    transition: 0.3s;
   }
   .filter-select-control__icons {
     display: flex;
     align-items: center;
   }
-  .filter-list__icon {
+  .filter-select-control__icon {
     min-width: 16px;
     display: flex;
     align-items: center;
@@ -270,15 +264,18 @@
   .filter-list {
     position: fixed;
     right: var(--unit);
-    /* padding: 18px 24px; */
-    padding: 6px 0;
-    background: var(--color-popup-bg);
-    box-shadow: 0px 4px 32px rgba(0, 16, 61, 0.16);
-    border-radius: 12px;
     width: 240px;
   }
+  .filter-list,
+  .filter-sort__list {
+    padding: 6px 0;
+    background: var(--color-popup-bg);
+    color: var(--color-text);
+    box-shadow: 0px 4px 32px rgba(0, 16, 61, 0.16);
+    border-radius: 12px;
+  }
   .filter-list_visible {
-    display: inline;
+    display: block;
   }
   .filter-list__inner {
     list-style: none;
@@ -315,6 +312,7 @@
   }
   .filter-list__hr {
     border-color: var(--color-border-bottom-message);
+    transform: scaleY(0.5);
     margin: 8px 0;
   }
   .filter-sort__list {
@@ -323,10 +321,6 @@
     left: -165px;
     top: -50px;
     list-style: none;
-    background: var(--color-popup-bg);
-    box-shadow: 0px 4px 32px rgba(0, 16, 61, 0.16);
-    border-radius: 12px;
-    padding: 6px 0;
   }
   .filter-sort__list_visible {
     display: block;

@@ -34,7 +34,6 @@ export async function setPagesOfMessages() {
     currentFolderCopy,
     filtersOfMessagesCopy
   )
-  console.log(numberOfPages)
   _pagesOfMessages.set(numberOfPages)
 }
 
