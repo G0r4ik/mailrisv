@@ -24,16 +24,24 @@
 Рефактор:
 css переменные
 
+- [ ] assets
+- [ ] variables.css
 - [ ] AllMessages
 - [ ] AppSetting
 - [ ] AppMessage
 - [ ] AppSidebar
 - [ ] MessageFilter
 - [ ] PopupAttach
-- [x] AppHeader
-- [x] UserAvatar
+- [ ] themes.js
 - [ ] App
 - [ ] globalStore
-- [ ]
+- [ ] api.js
+- [ ] AppHeader
+- [ ] server
+
+
+- [x] UserAvatar
+- [x] locale.js
+- [x] icons
 
 29kb

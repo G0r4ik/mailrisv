@@ -3,14 +3,38 @@
   import AppSidebar from './lib/AppSidebar.svelte'
   import AllMessages from './lib/AllMessages.svelte'
   import AppMessage from './lib/AppMessage.svelte'
-  import { _currentMessage } from './globalStore'
+  import {
+    _currentRoute,
+    _currentMessage,
+    setPagesOfMessages,
+    _currentMessages,
+    setCurrentFolder,
+    handleRouteChange,
+    allFolders,
+  } from './globalStore'
+  import { onMount } from 'svelte'
+
+  onMount(async () => {
+    const urlDecode = str =>
+      decodeURIComponent((str + '').replace(/\+/g, '%20'))
+
+    const folder = urlDecode(window.location.pathname.split('/')[1])
+    if (!allFolders.includes(folder)) {
+      window.location.pathname = 'Incoming'
+    }
+    window.addEventListener('popstate', handleRouteChange)
+    handleRouteChange()
+    setCurrentFolder(folder)
+    await setPagesOfMessages()
+  })
 </script>
 
 <AppHeader />
 <div class="page">
   <AppSidebar />
   <main class="main">
-    {#if $_currentMessage}
+    {$_currentRoute}
+    {#if $_currentRoute.includes('message')}
       <AppMessage />
     {:else}
       <AllMessages />

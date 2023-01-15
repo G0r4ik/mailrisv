@@ -22,33 +22,46 @@ const MIME = {
   json: 'application/json; charset=utf-8',
   html: 'text/html; charset=utf-8',
 }
-const staticFolders = [
-  'Входящие',
-  'Важное',
-  'Отправленные',
-  'Черновики',
-  'Архив',
-  'Спам',
-  'Корзина',
-]
+const staticFolders = {
+  Входящие: 'Incoming',
+  Важное: 'Important',
+  Отправленные: 'Sent',
+  Черновики: 'Drafts',
+  Архив: 'Archive',
+  Спам: 'Spam',
+  Корзина: 'Basket',
+}
+
 const userFolders = new Set()
 const db = []
-const imagesInmessages = {}
+const imagesInMessages = {}
 const allMessages = {}
 
 function createFolders(message) {
   if (!message.folder) message.folder = 'Входящие'
-  if (!allMessages[message.folder]) allMessages[message.folder] = []
-  if (!staticFolders.includes(message.folder)) userFolders.add(message.folder)
-  allMessages[message.folder].push(message)
+  if (staticFolders[message.folder]) {
+    if (allMessages[staticFolders[message.folder]]) {
+      allMessages[staticFolders[message.folder]].push(message)
+    } else {
+      allMessages[staticFolders[message.folder]] = [message]
+    }
+  } else {
+    userFolders.add(message.folder)
+    if (allMessages[message.folder]) {
+      allMessages[message.folder].push(message)
+    } else {
+      allMessages[message.folder] = [message]
+    }
+  }
 }
+
 function removeImgFrommessageAndMove(message) {
   if (Array.isArray(message.doc.img)) {
     message.imagesCount = message.doc.img.length
-    imagesInmessages[message.id] = message.doc.img
+    imagesInMessages[message.id] = message.doc.img
   } else {
     message.imagesCount = 1
-    imagesInmessages[message.id] = [message.doc.img]
+    imagesInMessages[message.id] = [message.doc.img]
   }
   message.doc.img = []
 }
@@ -173,7 +186,6 @@ const server = http.createServer((req, res) => {
       }
       const startIndex = (page - 1) * limit
       const endIndex = page * limit
-
       const filterObj = JSON.parse(filter)
       const copyOfAllMessages = filterMessages(allMessages[folder], filterObj)
       const messages = sortMessages(copyOfAllMessages, sort)
@@ -192,7 +204,20 @@ const server = http.createServer((req, res) => {
       const folders = Object.keys(allMessages)
 
       const result = {}
-      folders.map(folder => (result[folder] = allMessages[folder].length))
+      folders.map(folder => {
+        console.log(folder)
+        result[folder] = allMessages[folder].length
+      })
+      return res.end(JSON.stringify(result))
+    }
+    if (req.url.startsWith('/getFullMessage')) {
+      res.setHeader('Content-Type', MIME['json'])
+      const id = queriesParams.id
+      const folder = queriesParams.folder
+      const result = allMessages[folder].find(message => message.id == id)
+      const img = imagesInMessages[id]
+      if (!img) return res.end(JSON.stringify(result))
+      result.doc.img = img
       return res.end(JSON.stringify(result))
     }
     if (req.url.startsWith('/getNumberOfMessagesInFolder')) {
@@ -217,7 +242,7 @@ const server = http.createServer((req, res) => {
         res.statusCode = 400
         return res.end('Invalid id or number')
       }
-      const img = imagesInmessages[idOfMessage]?.[imageNumber]
+      const img = imagesInMessages[idOfMessage]?.[imageNumber]
       if (!img) {
         console.log("Couldn't find the picture")
         res.statusCode = 404

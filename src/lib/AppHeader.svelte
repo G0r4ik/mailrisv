@@ -1,18 +1,26 @@
 <script>
+  import logo from '../assets/logo.svg'
+  import IconGoBack from './svg-icons/IconGoBack.svelte'
+  import MessageFilter from './MessageFilter.svelte'
   import {
     i18n,
     _currentMessage,
     _language,
     setCurrentMessage,
+    handleRouteChange,
+    _currentFolder,
+    _currentRoute,
   } from '../globalStore'
-  import MessageFilter from './MessageFilter.svelte'
-  import logo from '../assets/logo.svg'
-  import IconGoBack from './svg-icons/IconGoBack.svelte'
-  const goBack = () => setCurrentMessage(null)
+
+  const goBack = () => {
+    window.history.pushState({}, '', `/${$_currentFolder}`)
+    handleRouteChange()
+    setCurrentMessage(null)
+  }
 </script>
 
 <header class="header">
-  {#if !$_currentMessage}
+  {#if !$_currentRoute.includes('message')}
     <img src={logo} alt="logo" />
   {:else}
     <div

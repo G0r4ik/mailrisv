@@ -1,6 +1,7 @@
 <script>
   import { getAnotherFolders, getNumberOfMessagesInAllFolders } from '../api'
   import {
+    handleRouteChange,
     i18n,
     setCurrentFolder,
     _currentFolder,
@@ -21,7 +22,6 @@
   import IconNewFolderPlus from './svg-icons/IconNewFolderPlus.svelte'
 
   let pressEsc = event => {
-    console.log('1')
     if (event.key === 'Escape') closeSettings()
   }
 
@@ -32,7 +32,6 @@
 
   let numberOfMessageInFolders = []
   getNumberOfMessagesInAllFolders().then(res => {
-    console.log(res)
     numberOfMessageInFolders = res
   })
 
@@ -44,7 +43,9 @@
   })
 
   function serCurrentFolder(folder) {
-    setCurrentFolder(folder)
+    window.history.pushState({}, '', `/${folder}`)
+    handleRouteChange()
+    // setCurrentFolder(folder)
   }
   function showFullSidebar() {
     const sidebar = document.querySelector('.sidebar')
@@ -80,11 +81,11 @@
 
   <ul class="sidebar__folders">
     <li
-      class="folders__item {$_currentFolder === 'Входящие'
+      class="folders__item {$_currentFolder === 'Incoming'
         ? 'folders__item_active'
         : ''}"
-      on:click={() => serCurrentFolder('Входящие')}
-      on:keypress={() => serCurrentFolder('Входящие')}
+      on:click={() => serCurrentFolder('Incoming')}
+      on:keypress={() => serCurrentFolder('Incoming')}
     >
       <div class="folders__icon">
         <IconIncoming />
@@ -93,15 +94,15 @@
         >{i18n('staticFolders', 'Incoming', $_language)}
       </span>
       <span class="folders__item-count">
-        {numberOfMessageInFolders['Входящие']}
+        {numberOfMessageInFolders['Incoming']}
       </span>
     </li>
     <li
-      class="folders__item {$_currentFolder === 'Важное'
+      class="folders__item {$_currentFolder === 'Important'
         ? 'folders__item_active'
         : ''}"
-      on:click={() => serCurrentFolder('Важное')}
-      on:keypress={() => serCurrentFolder('Важное')}
+      on:click={() => serCurrentFolder('Important')}
+      on:keypress={() => serCurrentFolder('Important')}
     >
       <div class="folders__icon">
         <IconImportant />
@@ -110,15 +111,15 @@
         {i18n('staticFolders', 'Important', $_language)}</span
       >
       <span class="folders__item-count">
-        {numberOfMessageInFolders['Важное']}
+        {numberOfMessageInFolders['Important']}
       </span>
     </li>
     <li
-      class="folders__item {$_currentFolder === 'Отправленные'
+      class="folders__item {$_currentFolder === 'Sent'
         ? 'folders__item_active'
         : ''}"
-      on:click={() => serCurrentFolder('Отправленные')}
-      on:keypress={() => serCurrentFolder('Отправленные')}
+      on:click={() => serCurrentFolder('Sent')}
+      on:keypress={() => serCurrentFolder('Sent')}
     >
       <div class="folders__icon">
         <IconSent />
@@ -127,15 +128,15 @@
         >{i18n('staticFolders', 'Sent', $_language)}</span
       >
       <span class="folders__item-count">
-        {numberOfMessageInFolders['Отправленные']}
+        {numberOfMessageInFolders['Sent']}
       </span>
     </li>
     <li
-      class="folders__item {$_currentFolder === 'Черновики'
+      class="folders__item {$_currentFolder === 'Drafts'
         ? 'folders__item_active'
         : ''}"
-      on:click={() => serCurrentFolder('Черновики')}
-      on:keypress={() => serCurrentFolder('Черновики')}
+      on:click={() => serCurrentFolder('Drafts')}
+      on:keypress={() => serCurrentFolder('Drafts')}
     >
       <div class="folders__icon">
         <IconDrafts />
@@ -144,15 +145,15 @@
         >{i18n('staticFolders', 'Drafts', $_language)}</span
       >
       <span class="folders__item-count">
-        {numberOfMessageInFolders['Черновики']}
+        {numberOfMessageInFolders['Drafts']}
       </span>
     </li>
     <li
-      class="folders__item {$_currentFolder === 'Архив'
+      class="folders__item {$_currentFolder === 'Archive'
         ? 'folders__item_active'
         : ''}"
-      on:click={() => serCurrentFolder('Архив')}
-      on:keypress={() => serCurrentFolder('Архив')}
+      on:click={() => serCurrentFolder('Archive')}
+      on:keypress={() => serCurrentFolder('Archive')}
     >
       <div class="folders__icon">
         <IconArchive />
@@ -161,15 +162,15 @@
         >{i18n('staticFolders', 'Archive', $_language)}</span
       >
       <span class="folders__item-count">
-        {numberOfMessageInFolders['Архив']}
+        {numberOfMessageInFolders['Archive']}
       </span>
     </li>
     <li
-      class="folders__item {$_currentFolder === 'Спам'
+      class="folders__item {$_currentFolder === 'Spam'
         ? 'folders__item_active'
         : ''}"
-      on:click={() => serCurrentFolder('Спам')}
-      on:keypress={() => serCurrentFolder('Спам')}
+      on:click={() => serCurrentFolder('Spam')}
+      on:keypress={() => serCurrentFolder('Spam')}
     >
       <div class="folders__icon">
         <IconSpam />
@@ -179,15 +180,15 @@
         >{i18n('staticFolders', 'Spam', $_language)}</span
       >
       <span class="folders__item-count">
-        {numberOfMessageInFolders['Спам']}
+        {numberOfMessageInFolders['Spam']}
       </span>
     </li>
     <li
-      class="folders__item {$_currentFolder === 'Корзина'
+      class="folders__item {$_currentFolder === 'Basket'
         ? 'folders__item_active'
         : ''}"
-      on:click={() => serCurrentFolder('Корзина')}
-      on:keypress={() => serCurrentFolder('Корзина')}
+      on:click={() => serCurrentFolder('Basket')}
+      on:keypress={() => serCurrentFolder('Basket')}
     >
       <div class="folders__icon">
         <IconBasket />
@@ -197,7 +198,7 @@
         >{i18n('staticFolders', 'Basket', $_language)}</span
       >
       <span class="folders__item-count">
-        {numberOfMessageInFolders['Корзина']}
+        {numberOfMessageInFolders['Basket']}
       </span>
     </li>
   </ul>

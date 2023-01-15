@@ -4,7 +4,6 @@
   import IconImportant from './svg-icons/IconImportant.svelte'
   import IconAttach from './svg-icons/IconAttach.svelte'
   import IconStatus from './svg-icons/IconStatus.svelte'
-  import { getNumberOfMessagesInFolder, getMessageImageById } from '../api.js'
   import { onMount } from 'svelte'
 
   import {
@@ -18,17 +17,14 @@
     _currentMessages,
     _language,
     _numberOfMessagesReceived,
-    getAttach,
-    setPagesOfMessages,
     _pagesOfMessages,
+    handleRouteChange,
+    getImages,
   } from '../globalStore'
   import UserAvatar from './UserAvatar.svelte'
 
-  let page = 1
-  let visibleMessage = null
   let currentAttaches = null
   let throttledResize = null
-  let firstCountOfLoadImages = null
 
   $: maxPages = Math.ceil($_pagesOfMessages / $_numberOfMessagesReceived)
 
@@ -37,8 +33,6 @@
     const main = document.querySelector('.main')
     main.addEventListener('scroll', throttledResize)
     window.addEventListener('resize', throttledResize)
-    await setPagesOfMessages()
-    await loadMessages(false)
   })
 
   function changeStatus(message) {
@@ -49,9 +43,6 @@
   }
   function changeMark(message) {
     message.bookmark = !message.bookmark
-  }
-  function closeCurrentMessage() {
-    visibleMessage = null
   }
   function throttle(callee, timeout) {
     let timer = null
@@ -78,6 +69,9 @@
     return new URL(`../assets/${flag}.svg`, import.meta.url).href
   }
   async function goToMessage(message) {
+    window.history.pushState({}, '', `${$_currentFolder}/message-${message.id}`)
+    handleRouteChange()
+
     const main = document.querySelector('.main')
     main.removeEventListener('scroll', throttledResize)
     window.removeEventListener('resize', throttledResize)
@@ -118,26 +112,44 @@
   async function showAttach(message) {
     currentAttaches = message
     if (message.isDocLoad) return
+    await getImages(message)
     message.isDocLoad = true
-    for (let i = 0; i < message.imagesCount; i++) {
-      const img = await getMessageImageById(message.id, i)
-      await getAttach(message, img)
-    }
   }
+
+  let selectedMessages = {}
 
   function closePopup() {
     currentAttaches = null
   }
+
+  function showSelect(event) {
+    event.target.classList.add('messages__item_select')
+  }
+  function closeSelect(event) {
+    event.target.classList.remove('messages__item_select')
+  }
+
+  function handleSelect(id) {
+    selectedMessages = { ...selectedMessages, [id]: true }
+    const messageNode = document.querySelector(`#message${id}`)
+    messageNode.classList.toggle('messages__item_select-static')
+  }
 </script>
 
+<!-- <div class="messages__item_select" /> -->
 <div class="messages" id="id1">
   {#if $_currentMessages.length}
     {#each $_currentMessages as message (message.id)}
       <div
+        id={`message${message.id}`}
         class="messages__item message"
+        class:messages__item_select={selectedMessages[message.id]}
         on:click={() => goToMessage(message)}
         on:keypress={() => goToMessage(message)}
+        on:mouseenter={event => showSelect(event)}
+        on:mouseleave={event => closeSelect(event)}
       >
+        <!-- {selectedMessages[message.id]} -->
         <div
           class="message__status-wrapper"
           on:click|preventDefault
@@ -149,18 +161,22 @@
             isRead={message.read}
           />
         </div>
-        <div class="message__user">
-          {#if message.author.avatar}
-            <img
-              class="message__user-img"
-              src={message.author.avatar}
-              alt="logo"
-            />
-          {:else}
-            <div class="message__user-img">
+        <div class="message__user ">
+          <div class="message__user-img">
+            {#if message.author.avatar}
+              <img src={message.author.avatar} alt="logo" />
+            {:else}
               <UserAvatar firstChar={message.author.surname[0]} />
-            </div>
-          {/if}
+            {/if}
+          </div>
+          <input
+            on:click|stopPropagation
+            on:change={() => handleSelect(message.id)}
+            class="messages__item-select"
+            type="checkbox"
+            name="message"
+            id={message.id}
+          />
           <span
             class:message__user-name_bold={!message.read}
             class="message__user-name"
@@ -241,10 +257,11 @@
     background: var(--color-hover);
     border-radius: var(--border-radius-main);
   }
-  :global(.message:hover .message__status) {
+
+  .message:hover .message__status {
     visibility: visible;
   }
-  :global(.message:hover .message__mark) {
+  .message:hover .message__mark {
     visibility: visible;
   }
   .messages__item {
@@ -257,7 +274,39 @@
   .messages__item:not(:last-child) {
     border-bottom: 1px solid var(--color-border-bottom-message);
   }
-  :global(.message__status-wrapper) {
+
+  :global(.messages__item_select),
+  :global(.messages__item_select:hover),
+  :global(.messages__item_select-static) {
+    background: var(--color-hover) !important;
+  }
+  :global(.messages__item_select .message__user-img),
+  :global(.messages__item_select-static .message__user-img) {
+    transform: scale(0.1);
+    /* opacity: 0; */
+    /* display: none; */
+    transition: 0.1s;
+  }
+  .messages__item-select {
+    position: absolute;
+    left: 47px;
+    opacity: 0;
+    width: 100%;
+    margin-right: var(--unit);
+    width: 16px;
+    height: 16px;
+    min-width: 16px;
+    min-height: 16px;
+    border-radius: 50%;
+  }
+
+  :global(.messages__item_select .messages__item-select),
+  :global(.messages__item_select-static .messages__item-select) {
+    opacity: 1 !important;
+    transition: 0.4s;
+  }
+
+  .message__status-wrapper {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -272,7 +321,7 @@
     cursor: pointer;
   }
 
-  :global(.message__status_not-read) {
+  .message__status_not-read {
     visibility: visible;
     background: var(--color-primary);
   }
@@ -280,6 +329,10 @@
     display: flex;
     align-items: center;
     width: 216px;
+  }
+  .message__user-img img {
+    width: 100%;
+    border-radius: 50%;
   }
   .message__user-img {
     margin-right: var(--unit);
@@ -310,10 +363,10 @@
     margin: 0 var(--unit);
     cursor: pointer;
   }
-  :global(.message__mark) {
+  .message__mark {
     visibility: hidden;
   }
-  :global(.message__mark_active) {
+  .message__mark_active {
     visibility: visible;
   }
   .messages__flag {

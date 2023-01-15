@@ -16,7 +16,7 @@
 БГ главного
 
  */
- --color-header-background: var(--color-text);
+  --color-header-background: var(--color-text);
 
   --color-text-dark: #2c2d2e;
   --color-text-light: #e7e8ea;
@@ -40,6 +40,7 @@
   --color-border-bottom-message: rgb(0 16 61 / 0.12);
   --color-active-folder: rgb(0 16 61 / 0.08);
   --color-hover: rgb(0 16 61 / 0.04);
+  --color-select: rgb(0 16 61 / 0.04);
   --color-main-scroll: hsl(0deg 0% 80%);
   --color-skeleton-bg: rgb(0 0 0 / 0.12);
   --color-modal-bg: rgb(0 0 0 / 0.9);
@@ -68,4 +69,5 @@
   --color-hover: rgb(255 255 255 / 0.04);
   --color-main-scroll: hsl(0deg 0% 30%);
   --color-hr: rgb(255 255 255 / 0.16);
+  --color-select: rgba(255, 255, 255, 0.08);
 }

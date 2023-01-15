@@ -1,5 +1,5 @@
 <script>
-  import { getMessageImageById } from '../api'
+  import { getFullMessage } from '../api'
   import IconBookmark from './svg-icons/IconBookmark.svelte'
   import IconImportant from './svg-icons/IconImportant.svelte'
   import UserAvatar from './UserAvatar.svelte'
@@ -7,17 +7,24 @@
     setCurrentMessage,
     i18n,
     _currentMessage,
+    _currentMessages,
     _language,
+    getImages,
   } from '../globalStore'
   import { onMount } from 'svelte'
-
+  import { onDestroy } from 'svelte'
+  // $: if (!$_currentMessage) {
+  //   const searchParams = new URLSearchParams(window.location.search)
+  //   const messageId = searchParams.get('message')
+  //   const message = $_currentMessages.find(message => messageId === message.id)
+  // }
   let allRecipients = []
   let defaultMaxRecipients = 4
   let imagesCount = null
   let isVisibleAllRecipients
-  $: isVisibleAllRecipients = $_currentMessage.to.length > defaultMaxRecipients
+  $: isVisibleAllRecipients = $_currentMessage?.to.length > defaultMaxRecipients
 
-  $: recipients = $_currentMessage.to
+  $: recipients = $_currentMessage?.to
     .map(user => `${user.name} ${user.surname}`)
     .slice(0, defaultMaxRecipients)
     .join(', ')
@@ -35,16 +42,21 @@
     if ([2, 3, 4].includes(recipients)) return `${recipients} получателя`
     return `${recipients} получателей`
   }
-
+  onDestroy(() => setCurrentMessage(null))
   onMount(async () => {
-    if ($_currentMessage.doc) {
-      for (let i = 0; i < $_currentMessage.imagesCount; i++) {
-        const imgSrc = await getMessageImageById($_currentMessage.id, i)
-        $_currentMessage.doc.img.push(window.URL.createObjectURL(imgSrc))
-        await setCurrentMessage($_currentMessage)
-        imagesCount += imgSrc.size
-      }
-    }
+    const folder = window.location.pathname.split('/')[1]
+    const messageId = window.location.pathname.split('/')[2].split('-')[1]
+    const message = await getFullMessage(folder, messageId)
+    setCurrentMessage(message)
+    // await getImages($_currentMessage)
+    // console.log($_currentMessage.doc.img.length, $_currentMessage.imagesCount)
+    // if (
+    //   $_currentMessage.imagesCount ??
+    //   $_currentMessage.doc.img.length !== $_currentMessage.imagesCount
+    // ) {
+    //   console.log('a', $_currentMessage.doc)
+    //   console.log('a', $_currentMessage.doc)
+    // }
   })
 
   function loadImgs() {

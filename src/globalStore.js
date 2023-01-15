@@ -1,8 +1,15 @@
 import { writable } from 'svelte/store'
-import { getMessagesByFolder, getNumberOfMessagesInFolder } from './api'
+import {
+  getMessagesByFolder,
+  getNumberOfMessagesInAllFolders,
+  getNumberOfMessagesInFolder,
+  getMessageImageById,
+} from './api'
 import locale from './locale'
 
-export const _currentFolder = writable('Входящие')
+export const _currentFolder = writable(
+  window.location.pathname.split('/')[1] || 'Incoming'
+)
 export const _currentMessages = writable([])
 export const _pageOfMessages = writable(1)
 export const _currentMessage = writable(null)
@@ -16,6 +23,34 @@ export const _filtersOfMessages = writable({
   withAttachments: false,
 })
 
+export let _currentRoute = writable('')
+
+export async function getImages(message) {
+  if (message.imagesCount === message.doc.img.length) return
+  for (let i = 0; i < message.imagesCount; i++) {
+    const img = await getMessageImageById(message.id, i)
+    _currentMessages.update(data => {
+      data.find(m => m.id === message.id).doc.img.push(img)
+      return data
+    })
+  }
+}
+
+export const allFolders = Object.keys(await getNumberOfMessagesInAllFolders())
+
+export function handleRouteChange(isNeedLoadMessages = true) {
+  const urlDecode = str => decodeURIComponent((str + '').replace(/\+/g, '%20'))
+  const isOpenMessage = window.location.pathname.split('/')[2]?.split('-')[0]
+  if (isOpenMessage !== 'message') _currentMessage.set(null)
+  const folder = urlDecode(window.location.pathname.split('/')[1])
+
+  if (currentFolderCopy !== folder) setCurrentFolder(folder)
+  if (!allFolders.includes(folder)) {
+    window.location.pathname = 'Incoming'
+  }
+  _currentRoute.set(window.location.pathname)
+}
+
 let currentFolderCopy
 _currentFolder.subscribe(data => (currentFolderCopy = data))
 let pageOfMessagesCopy
@@ -28,6 +63,8 @@ let numberOfMessagesReceivedCopy
 _numberOfMessagesReceived.subscribe(
   data => (numberOfMessagesReceivedCopy = data)
 )
+let currentMessagesCopy
+_currentMessages.subscribe(data => (currentMessagesCopy = data))
 
 export async function setPagesOfMessages() {
   const numberOfPages = await getNumberOfMessagesInFolder(
@@ -68,13 +105,6 @@ export function i18n(folder, string, language = 'ru') {
 
 export function setCurrentMessage(currentMessage) {
   _currentMessage.set(currentMessage)
-}
-
-export function getAttach(message, img) {
-  _currentMessages.update(data => {
-    data.find(m => m.id === message.id).doc.img.push(img)
-    return data
-  })
 }
 
 export async function loadMessages(isOverwritingMessages) {

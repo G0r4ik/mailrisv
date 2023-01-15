@@ -12,6 +12,13 @@ export const getAnotherFolders = async () => {
   return data.json()
 }
 
+export const getFullMessage = async (folder, id) => {
+  const data = await fetch(
+    `${BASE_URL}/getFullMessage?folder=${folder}&id=${id}`
+  )
+  return data.json()
+}
+
 export const getMessagesByFolder = async (
   limit,
   folder,
