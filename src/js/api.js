@@ -26,17 +26,17 @@ export const getMessagesByFolder = async (
   filters,
   sort
 ) => {
-  const filterString = JSON.stringify(filters)
+  const filtersString = JSON.stringify(filters)
   const data = await fetch(
-    `${BASE_URL}/getMessagesByFolder?page=${page}&limit=${limit}&folder=${folder}&filter=${filterString}&sort=${sort}`
+    `${BASE_URL}/getMessagesByFolder?page=${page}&limit=${limit}&folder=${folder}&filter=${filtersString}&sort=${sort}`
   )
   return data.json()
 }
 
-export const getNumberOfMessagesInFolder = async (folder, filters) => {
-  const filterString = JSON.stringify(filters)
+export const getNumberOfMessagesInCurrentFolder = async (folder, filters) => {
+  const filtersString = JSON.stringify(filters)
   const data = await fetch(
-    `${BASE_URL}/getNumberOfMessagesInFolder?folder=${folder}&filter=${filterString}`
+    `${BASE_URL}/getNumberOfMessagesInCurrentFolder?folder=${folder}&filter=${filtersString}`
   )
   return data.json()
 }

@@ -5,18 +5,42 @@
   import IconCheck from './svg-icons/IconCheck.svelte'
   import IconSelectControl from './svg-icons/IconSelectControl.svelte'
   import {
-    i18n,
+    changePageOfMessages,
+    loadMessages,
+    _currentFolder,
+    getNumberOfMessagesInCurrentFolder,
+    _numberOfMessagesReceived,
+    _pageOfMessages,
+  } from '../js/globalStore'
+  import {
     _filtersOfMessages,
     _sortOfMessages,
     clearFilter,
     setFilter,
     changeSort,
-    changePageOfMessages,
-    loadMessages,
-    _language,
-    _currentFolder,
-    setPagesOfMessages,
-  } from '../globalStore'
+  } from '../js/filterAndSortMessages'
+  import { i18n, _language } from '../js/language'
+
+  import { addEvent, deleteEvent } from '../js/events'
+
+  $: isAllFilterDisabled = Object.values($_filtersOfMessages).every(
+    k => k === false
+  )
+  $: isAllFilterAndSortDisabled =
+    isAllFilterDisabled && $_sortOfMessages === 'newToOld'
+
+  $: onlyBookmark =
+    !$_filtersOfMessages.unread &&
+    $_filtersOfMessages.bookmark &&
+    !$_filtersOfMessages.withAttachments
+  $: onlyAttachments =
+    !$_filtersOfMessages.unread &&
+    !$_filtersOfMessages.bookmark &&
+    $_filtersOfMessages.withAttachments
+  $: onlyUnread =
+    $_filtersOfMessages.unread &&
+    !$_filtersOfMessages.bookmark &&
+    !$_filtersOfMessages.withAttachments
 
   const sortText = [
     'newToOld',
@@ -27,12 +51,6 @@
     'titleLastToFirst',
   ]
 
-  $: isAllFilterDisabled = Object.values($_filtersOfMessages).every(
-    k => k === false
-  )
-  $: isAllFilterAndSortDisabled =
-    isAllFilterDisabled && $_sortOfMessages === 'newToOld'
-
   let isShowFilterMenu = false
   let isShowSortMenu = false
 
@@ -40,7 +58,7 @@
     if ($_sortOfMessages === sort) return
     changeSort(sort)
     changePageOfMessages(1)
-    await loadMessages(false)
+    await loadMessages(true)
   }
 
   const filteredMessages = async filter => {
@@ -51,41 +69,42 @@
       clearFilter()
       changeSort('newToOld')
       isShowSortMenu = false
+      if (isAllFilterAndSortDisabled) return
     } else {
       setFilter(filter)
     }
     changePageOfMessages(1)
-    await setPagesOfMessages()
-    await loadMessages(false)
-  }
-
-  function closeFilterPopup() {
-    isShowFilterMenu = false
-    document.body.removeEventListener('click', clickOutside)
-    document.body.removeEventListener('keydown', pressEsc)
-  }
-
-  let clickOutside = event => {
-    const filterNode = document.querySelector('.filter-messages')
-    if (!filterNode.contains(event.target)) closeFilterPopup()
-  }
-  let pressEsc = event => {
-    if (event.key === 'Escape') closeFilterPopup()
+    await getNumberOfMessagesInCurrentFolder()
+    await loadMessages(true)
   }
 
   function showFilterMenu() {
     isShowFilterMenu = !isShowFilterMenu
     isShowSortMenu = false
-    document.body.addEventListener('click', clickOutside)
-    document.body.addEventListener('keydown', pressEsc)
+
+    if (!isShowFilterMenu) {
+      console.log('delete?')
+      deleteEvent('body', 'keydown', 'showFilterMenu')
+      deleteEvent('body', 'click', 'showFilterMenu2')
+    } else {
+      addEvent(showFilterMenu, {
+        node: 'body',
+        wrapper: 'showFilterMenu',
+        functionOnActions: 'pressEsc',
+        eventDOM: 'keydown',
+      })
+      addEvent(showFilterMenu, {
+        node: 'body',
+        wrapper: 'showFilterMenu2',
+        functionOnActions: 'clickOutside',
+        eventDOM: 'click',
+        outside: '.filter-messages',
+      })
+    }
   }
 
   function showSortMenu() {
     isShowSortMenu = !isShowSortMenu
-  }
-
-  function getNameOfLocale(sort) {
-    return `sort${sort[0].toUpperCase()}${sort.slice(1)}`
   }
 </script>
 
@@ -114,12 +133,12 @@
     </div>
     <span class="filter-select-control__text">
       {#if $_sortOfMessages !== 'newToOld'}
-        {i18n('sortOfMessages', getNameOfLocale($_sortOfMessages), $_language)}
-      {:else if $_filtersOfMessages.bookmark && !$_filtersOfMessages.unread && !$_filtersOfMessages.withAttachments}
+        {i18n('sortOfMessages', $_sortOfMessages, $_language)}
+      {:else if onlyBookmark}
         {i18n('another', 'bookmark', $_language)}
-      {:else if $_filtersOfMessages.unread && !$_filtersOfMessages.bookmark && !$_filtersOfMessages.withAttachments}
+      {:else if onlyUnread}
         {i18n('another', 'unread', $_language)}
-      {:else if $_filtersOfMessages.withAttachments && !$_filtersOfMessages.bookmark && !$_filtersOfMessages.unread}
+      {:else if onlyAttachments}
         {i18n('another', 'withAttachments', $_language)}
       {:else if isAllFilterAndSortDisabled}
         {i18n('another', 'headerFilter', $_language)}
@@ -214,7 +233,7 @@
                 <div class="filter-sort__item-arrow">
                   <IconCheck />
                 </div>
-                {i18n('sortOfMessages', getNameOfLocale(sort), $_language)}
+                {i18n('sortOfMessages', sort, $_language)}
               </li>
             {/each}
           </ul>

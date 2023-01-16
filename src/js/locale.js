@@ -25,12 +25,12 @@ const locale = {
   },
 
   sortOfMessages: {
-    sortNewToOld: { ru: 'Сначала новые', en: 'First the new' },
-    sortOldToNew: { ru: 'Сначала старые', en: 'First the old' },
-    sortAuthorFirstToLast: { ru: 'Автор от А до Я', en: 'Author from A to Z' },
-    sortAuthorLastToFirst: { ru: 'Автор от Я до А', en: 'Author from Z to A' },
-    sortTitleFirstToLast: { ru: 'Тема от А до Я', en: 'Theme from A to Z' },
-    sortTitleLastToFirst: { ru: 'Тема от Я до А', en: 'Theme from Z to A' },
+    newToOld: { ru: 'Сначала новые', en: 'First the new' },
+    oldToNew: { ru: 'Сначала старые', en: 'First the old' },
+    authorFirstToLast: { ru: 'Автор от А до Я', en: 'Author from A to Z' },
+    authorLastToFirst: { ru: 'Автор от Я до А', en: 'Author from Z to A' },
+    titleFirstToLast: { ru: 'Тема от А до Я', en: 'Theme from A to Z' },
+    titleLastToFirst: { ru: 'Тема от Я до А', en: 'Theme from Z to A' },
   },
 
   another: {
@@ -64,6 +64,10 @@ const locale = {
     settingsThemeTitle: {
       ru: 'Настройки внешнего вида вашей почты и темы оформления',
       en: 'Settings for the appearance of your mail and the theme',
+    },
+    noLetters: {
+      ru: 'Нет писем',
+      en: 'No letters',
     },
   },
 }

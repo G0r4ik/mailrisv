@@ -1,9 +1,18 @@
 <script>
   import { createEventDispatcher, onMount } from 'svelte'
-  import { i18n, changeLanguage, _language } from '../globalStore'
-  import { anotherThemes, darkColors, lightColors } from '../themes'
+  import { i18n, changeLanguage, _language } from '../js/language'
+  import { anotherThemes, darkColors, lightColors } from '../js/themes'
   import IconCross from './svg-icons/IconCross.svelte'
-
+  import IconEnglish from '../assets/languages/english.svg'
+  import IconRussian from '../assets/languages/russian.svg'
+  const languages = {
+    ru: 'Русский',
+    en: 'English',
+  }
+  const languageIcons = {
+    ru: IconRussian,
+    en: IconEnglish,
+  }
   const dispatch = createEventDispatcher()
 
   function closeSettings() {
@@ -35,6 +44,7 @@
         .href
       document.body.style.background = `url(${img}`
       document.body.style.backgroundSize = 'cover'
+      document.body.style.backgroundRepeat = 'no-repeat'
     }
 
     //
@@ -73,13 +83,6 @@
       return anotherThemes.find(t => t.id === 'default-dark')
     return anotherThemes.find(t => t.id === 'default-light')
   }
-  function hexToRgb(hex) {
-    const bigint = parseInt(hex, 16)
-    const r = (bigint >> 16) & 255
-    const g = (bigint >> 8) & 255
-    const b = bigint & 255
-    return r + ',' + g + ',' + b
-  }
   function setLanguage(language) {
     changeLanguage(language)
   }
@@ -110,7 +113,8 @@
           on:click={() => (currentSettings = 'language')}
           on:keypress={() => (currentSettings = 'language')}
         >
-          {i18n('another', 'language', $_language)} : {$_language}
+          {i18n('another', 'language', $_language)} : {languages[$_language]}
+          <img src={languageIcons[$_language]} alt="" />
         </div>
       </div>
       <div class="settings__main">
@@ -162,8 +166,8 @@
             </h5>
             <form class="settings__language-form">
               <label
-                class="settings__language-label"
                 for="settings-language-russian"
+                class="settings__language-item"
               >
                 <input
                   class="settings__language-radio"
@@ -173,12 +177,13 @@
                   value="ru"
                   bind:group={language}
                 />
-                <img src="../../public/languages/russian.svg" alt="" />
-                Русский
+                <div class="settings__language-label" />
+                <img src={IconRussian} alt="" />
+                <span class="settings__language-text"> Русский </span>
               </label>
               <label
-                class="settings__language-label"
                 for="settings-language-english"
+                class="settings__language-item"
               >
                 <input
                   class="settings__language-radio"
@@ -188,8 +193,9 @@
                   value="en"
                   bind:group={language}
                 />
-                <img src="../../public/languages/english.svg" alt="" />
-                English
+                <div class="settings__language-label" />
+                <img src={IconEnglish} alt="" />
+                <span class="settings__language-text"> English </span>
               </label>
               <button
                 class="settings__language-change-button"
@@ -206,6 +212,49 @@
 {/if}
 
 <style>
+  .settings__language-item {
+    margin-bottom: 18px;
+  }
+  .settings__language-label {
+    margin-right: 12px;
+    background-color: #fff;
+    box-shadow: 0px 2px 0px rgba(0, 0, 0, 0.04);
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    width: 16px;
+    height: 16px;
+    display: inline-block;
+    position: relative;
+    border-radius: 50%;
+  }
+  .settings__language-label::before {
+    content: '';
+    position: absolute;
+    display: none;
+  }
+  .settings__language-radio {
+    display: none;
+  }
+  .settings__language-radio:checked + .settings__language-label {
+    background-color: #005ff9;
+  }
+
+  .settings__language-radio:checked + .settings__language-label::before {
+    content: '';
+    background: var(--color-accent-bg);
+    display: block;
+    border-radius: 50%;
+    text-align: center;
+    position: absolute;
+    left: calc(50% - 3px);
+    top: calc(50% - 3px);
+    width: 6px;
+    height: 6px;
+  }
+
+  .settings__language-text {
+    margin-left: 12px;
+  }
+
   .settings {
     position: fixed;
     bottom: 0;
@@ -336,22 +385,22 @@
     flex-direction: column;
     align-items: flex-start;
   }
-  :global(.settings__language-label:not(:last-of-type)) {
-    margin-bottom: 16px;
+  .settings__language-label:not(:last-of-type) {
+    /* margin-bottom: 16px; */
   }
   .settings__language-radio {
-    margin-right: 12px;
+    /* margin-right: 12px; */
   }
   .settings__language-change-button {
     margin-top: 32px;
     background: var(--color-primary);
-    color: var(--color-accent-bg);
+    color: #fff;
     padding: 8px 20px;
     border-radius: 8px;
   }
   @media (max-width: 768px) {
     .settings__list {
-      min-width: 160px;
+      /* min-width: 160px; */
     }
   }
 </style>

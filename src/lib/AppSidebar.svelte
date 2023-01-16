@@ -1,12 +1,9 @@
 <script>
-  import { getAnotherFolders, getNumberOfMessagesInAllFolders } from '../api'
-  import {
-    handleRouteChange,
-    i18n,
-    setCurrentFolder,
-    _currentFolder,
-    _language,
-  } from '../globalStore'
+  import { getAnotherFolders, getNumberOfMessagesInAllFolders } from '../js/api'
+  import { _currentFolder } from '../js/globalStore'
+  import { handleRouteChange } from '../js/routing'
+  import { i18n, _language } from '../js/language'
+
   import { onMount } from 'svelte'
   import AppSettings from './AppSettings.svelte'
   import IconImportant from './svg-icons/staticFolders/IconImportant.svelte'
@@ -20,20 +17,22 @@
   import IconBurgerMenu from './svg-icons/IconBurgerMenu.svelte'
   import IconWriteMessage from './svg-icons/IconWriteMessage.svelte'
   import IconNewFolderPlus from './svg-icons/IconNewFolderPlus.svelte'
-
-  let pressEsc = event => {
-    if (event.key === 'Escape') closeSettings()
-  }
+  import { addEvent, deleteEvent } from '../js/events'
 
   function showSettings() {
     isOpenSettings = true
-    document.body.addEventListener('keydown', pressEsc)
+    addEvent(closeSettings, {
+      node: 'body',
+      wrapper: 'showSettings',
+      functionOnActions: 'pressEsc',
+      eventDOM: 'keydown',
+    })
   }
 
   let numberOfMessageInFolders = []
-  getNumberOfMessagesInAllFolders().then(res => {
-    numberOfMessageInFolders = res
-  })
+  getNumberOfMessagesInAllFolders().then(
+    res => (numberOfMessageInFolders = res)
+  )
 
   let anotherFolders = null
   let isOpenSettings = false
@@ -53,7 +52,8 @@
   }
   function closeSettings() {
     isOpenSettings = false
-    document.body.removeEventListener('keydown', pressEsc)
+    deleteEvent('body', 'keydown', 'showSettings')
+    // document.body.removeEventListener('keydown', pressEsc)
   }
 </script>
 
@@ -94,7 +94,7 @@
         >{i18n('staticFolders', 'Incoming', $_language)}
       </span>
       <span class="folders__item-count">
-        {numberOfMessageInFolders['Incoming']}
+        {numberOfMessageInFolders['Incoming'] || ''}
       </span>
     </li>
     <li
@@ -111,7 +111,7 @@
         {i18n('staticFolders', 'Important', $_language)}</span
       >
       <span class="folders__item-count">
-        {numberOfMessageInFolders['Important']}
+        {numberOfMessageInFolders['Important'] || ''}
       </span>
     </li>
     <li
@@ -128,7 +128,7 @@
         >{i18n('staticFolders', 'Sent', $_language)}</span
       >
       <span class="folders__item-count">
-        {numberOfMessageInFolders['Sent']}
+        {numberOfMessageInFolders['Sent'] || ''}
       </span>
     </li>
     <li
@@ -145,7 +145,7 @@
         >{i18n('staticFolders', 'Drafts', $_language)}</span
       >
       <span class="folders__item-count">
-        {numberOfMessageInFolders['Drafts']}
+        {numberOfMessageInFolders['Drafts'] || ''}
       </span>
     </li>
     <li
@@ -162,7 +162,7 @@
         >{i18n('staticFolders', 'Archive', $_language)}</span
       >
       <span class="folders__item-count">
-        {numberOfMessageInFolders['Archive']}
+        {numberOfMessageInFolders['Archive'] || ''}
       </span>
     </li>
     <li
@@ -180,7 +180,7 @@
         >{i18n('staticFolders', 'Spam', $_language)}</span
       >
       <span class="folders__item-count">
-        {numberOfMessageInFolders['Spam']}
+        {numberOfMessageInFolders['Spam'] || ''}
       </span>
     </li>
     <li
@@ -198,7 +198,7 @@
         >{i18n('staticFolders', 'Basket', $_language)}</span
       >
       <span class="folders__item-count">
-        {numberOfMessageInFolders['Basket']}
+        {numberOfMessageInFolders['Basket'] || ''}
       </span>
     </li>
   </ul>
@@ -217,7 +217,7 @@
             {folder}
           </span>
           <span class="folders__item-count">
-            {numberOfMessageInFolders[folder]}
+            {numberOfMessageInFolders[folder] || ''}
           </span>
         </div>
       {/each}
@@ -241,6 +241,8 @@
     width: 200px;
     min-width: 200px;
     color: var(--color-sidebar-text);
+    margin-bottom: 50px;
+    overflow-y: auto;
   }
   .sidebar__write-message {
     margin: 0 auto;

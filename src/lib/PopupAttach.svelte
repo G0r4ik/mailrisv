@@ -1,16 +1,20 @@
 <script>
   import { createEventDispatcher } from 'svelte'
 
-  import { i18n, _language } from '../globalStore'
+  import { _currentMessage } from '../js/globalStore'
+  import { i18n, _language } from '../js/language'
+
   const dispatch = createEventDispatcher()
 
-  export let attaches
+  export let message
   export let idOfMessage
   let currentAttach = null
   let timer = null
   let timer2 = null
 
   function url(attach) {
+    if (message.doc.img.length === message.imagesCount)
+      return window.URL.createObjectURL(message.doc.img[0])
     return window.URL.createObjectURL(attach)
   }
   function getSizeOfDoc(imagesCount) {
@@ -55,7 +59,7 @@
   on:mouseenter={mouseOnPopup}
   on:keypress|stopPropagation
 >
-  {#each attaches as attach, i (i)}
+  {#each message.doc.img as attach, i (i)}
     <div
       class="popup-attach__item"
       on:mouseenter={() => showFullAttach(attach)}

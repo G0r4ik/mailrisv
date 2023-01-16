@@ -20,6 +20,7 @@ const MIME = {
   svg: 'image/svg+xml; charset=utf-8',
   jpg: 'image/jpeg; charset=utf-8',
   json: 'application/json; charset=utf-8',
+  png: 'image/png; charset=utf-8',
   html: 'text/html; charset=utf-8',
 }
 const staticFolders = {
@@ -205,7 +206,6 @@ const server = http.createServer((req, res) => {
 
       const result = {}
       folders.map(folder => {
-        console.log(folder)
         result[folder] = allMessages[folder].length
       })
       return res.end(JSON.stringify(result))
@@ -215,12 +215,9 @@ const server = http.createServer((req, res) => {
       const id = queriesParams.id
       const folder = queriesParams.folder
       const result = allMessages[folder].find(message => message.id == id)
-      const img = imagesInMessages[id]
-      if (!img) return res.end(JSON.stringify(result))
-      result.doc.img = img
       return res.end(JSON.stringify(result))
     }
-    if (req.url.startsWith('/getNumberOfMessagesInFolder')) {
+    if (req.url.startsWith('/getNumberOfMessagesInCurrentFolder')) {
       res.setHeader('Content-Type', MIME['json'])
       const filterObj = JSON.parse(queriesParams.filter)
       const folder = queriesParams.folder
@@ -255,7 +252,7 @@ const server = http.createServer((req, res) => {
     //
     const typeFile = req.url.split('.').at(-1)
     if (
-      ['js', 'css', 'svg'].includes(typeFile) &&
+      ['js', 'css', 'svg', 'png', 'jpg'].includes(typeFile) &&
       req.url.startsWith('/assets')
     ) {
       res.setHeader('Content-Type', MIME[typeFile])

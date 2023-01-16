@@ -1,26 +1,23 @@
 <script>
-  import { getFullMessage } from '../api'
+  import { getFullMessage, getMessageImageById } from '../js/api'
   import IconBookmark from './svg-icons/IconBookmark.svelte'
   import IconImportant from './svg-icons/IconImportant.svelte'
   import UserAvatar from './UserAvatar.svelte'
   import {
     setCurrentMessage,
-    i18n,
     _currentMessage,
     _currentMessages,
-    _language,
-    getImages,
-  } from '../globalStore'
+  } from '../js/globalStore'
+  import { i18n, _language } from '../js/language'
+
   import { onMount } from 'svelte'
   import { onDestroy } from 'svelte'
-  // $: if (!$_currentMessage) {
-  //   const searchParams = new URLSearchParams(window.location.search)
-  //   const messageId = searchParams.get('message')
-  //   const message = $_currentMessages.find(message => messageId === message.id)
-  // }
+
   let allRecipients = []
   let defaultMaxRecipients = 4
-  let imagesCount = null
+
+  let imagesCount = 0
+
   let isVisibleAllRecipients
   $: isVisibleAllRecipients = $_currentMessage?.to.length > defaultMaxRecipients
 
@@ -47,16 +44,14 @@
     const folder = window.location.pathname.split('/')[1]
     const messageId = window.location.pathname.split('/')[2].split('-')[1]
     const message = await getFullMessage(folder, messageId)
+
+    for (let i = 0; i < message.imagesCount; i++) {
+      const img = await getMessageImageById(message.id, i)
+      message.doc.img[i] = img
+      imagesCount += img.size
+    }
+
     setCurrentMessage(message)
-    // await getImages($_currentMessage)
-    // console.log($_currentMessage.doc.img.length, $_currentMessage.imagesCount)
-    // if (
-    //   $_currentMessage.imagesCount ??
-    //   $_currentMessage.doc.img.length !== $_currentMessage.imagesCount
-    // ) {
-    //   console.log('a', $_currentMessage.doc)
-    //   console.log('a', $_currentMessage.doc)
-    // }
   })
 
   function loadImgs() {
@@ -70,7 +65,7 @@
     }
   }
 
-  function getSizeOfDoc() {
+  $: getSizeOfDoc = () => {
     if (!imagesCount) return '...'
     if (imagesCount <= 1000) {
       return imagesCount + ' bit'
@@ -147,28 +142,23 @@
               on:click|stopPropagation={() => changeImportant($_currentMessage)}
               on:keypress|stopPropagation={() =>
                 changeImportant($_currentMessage)}
-              class="message__important"
+              class="full-message__icon"
             >
               <IconImportant />
             </div>
-          {/if}
-          {#if $_currentMessage.important}
+          {:else if $_currentMessage.bookmark}
             <div
               on:click|stopPropagation={() => changeMark($_currentMessage)}
               on:keypress|stopPropagation={() => changeMark($_currentMessage)}
-              class="message__mark"
-              class:message__mark_active={$_currentMessage.bookmark}
+              class="full-message__icon"
             >
               <IconBookmark active={$_currentMessage.bookmark} />
             </div>
           {/if}
         </div>
         <div class="full-message__address">
-          {i18n('another', 'whoIs', $_language)}: {i18n(
-            'another',
-            'you',
-            $_language
-          )}, {recipients}
+          {i18n('another', 'whoIs', $_language)}:
+          {i18n('another', 'you', $_language)}, {recipients}
           {#if isVisibleAllRecipients}
             <button
               class="full-message__get-all-recipients"
@@ -184,7 +174,12 @@
       <div class="full-message__attaches attaches">
         <div class="attaches__items">
           {#each $_currentMessage.doc.img as attach (attach)}
-            <img class="attaches__img" src={attach} alt="" loading="lazy" />
+            <img
+              class="attaches__img"
+              src={window.URL.createObjectURL(attach)}
+              alt=""
+              loading="lazy"
+            />
           {/each}
         </div>
         <div class="attaches__count">
@@ -271,6 +266,9 @@
     font-size: var(--text-small);
     line-height: 18px;
     color: var(--color-gray);
+  }
+  .full-message__icon {
+    margin-left: 12px;
   }
   .full-message__address {
     font-weight: 400;

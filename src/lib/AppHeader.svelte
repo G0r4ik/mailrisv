@@ -3,15 +3,13 @@
   import IconGoBack from './svg-icons/IconGoBack.svelte'
   import MessageFilter from './MessageFilter.svelte'
   import {
-    i18n,
     _currentMessage,
-    _language,
     setCurrentMessage,
-    handleRouteChange,
     _currentFolder,
-    _currentRoute,
-  } from '../globalStore'
+  } from '../js/globalStore'
+  import { i18n, _language } from '../js/language'
 
+  import { handleRouteChange, _currentRoute } from '../js/routing'
   const goBack = () => {
     window.history.pushState({}, '', `/${$_currentFolder}`)
     handleRouteChange()

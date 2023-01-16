@@ -20,23 +20,26 @@
 - [ ] z-index
 - [ ] получать с сервера сразу и количество папок и сами папки
 - [ ] tab индексы
+- [ ] при изменении фильтров, получать не все заново, а только чего нет
 
 Рефактор:
 css переменные
 
-- [ ] assets
-- [ ] variables.css
 - [ ] AllMessages
-- [ ] AppSetting
 - [ ] AppMessage
 - [ ] AppSidebar
 - [ ] MessageFilter
+- [ ] AppSetting
+- [ ]
 - [ ] PopupAttach
-- [ ] themes.js
+- [ ] AppHeader
 - [ ] App
+- [ ]
+- [ ] assets
+- [ ] variables.css
+- [ ] themes.js
 - [ ] globalStore
 - [ ] api.js
-- [ ] AppHeader
 - [ ] server
 
 
